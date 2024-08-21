@@ -1,0 +1,72 @@
+.form-group .invalid-message {
+    color: #58151c;
+}
+
+.form-group .invalid-input, .invalid-input {
+    border: 1px solid #f1aeb5 !important;
+    background-color: #f8d7da !important;
+}
+
+input.display-mode[readonly], select.display-mode[disabled] {
+    background-color: #fcfcfd;
+    border: none;
+}
+.combo-dropdown-menu {
+    width: 100%;
+}
+.combo-dropdown-toggle {
+    cursor: default;
+}
+input.combo-dropdown-toggle[readonly]{
+    background-color: #fcfcfd;
+}
+/* .conflict-shell {
+    border: 1px dashed yellow;
+} */
+.conflict-shell input,
+.conflict-shell select,
+.conflict-shell .input-div,
+.conflict-shell .dropdown input.combo-dropdown-toggle,
+.conflict-shell .validated-checkbox,
+.conflict-shell textarea
+{
+    background-color: yellow;
+}
+.conflict-context-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    border: 1px solid rgba(200, 200, 200, .4);
+    box-shadow: 0 10px 20px rgb(64,64,64 / 5%);
+}
+.conflict-context-header {
+    border-bottom: 1px solid #6c757d;
+}
+.conflict-selection {
+    cursor: pointer;
+    padding: 0 7px;
+}
+.conflict-selection:hover {
+    background-color: #e2e3e5;
+}
+.conflict-selection-header {
+    font-weight: 600;
+}
+
+.invalid-tab {
+    background-color: #f8d7da;
+}
+
+.validated-form-control-div {
+    display: flex;
+    flex-direction: column;
+}
+
+.utc-datetime-input-div input.validated {
+    width: 100%;
+}
+
+.validated-form-control-div .validated-checkbox {
+    align-self: start;
+    margin-left: 1px;
+}
