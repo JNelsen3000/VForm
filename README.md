@@ -92,7 +92,7 @@ const options = { manualReset: true, noValidationOnChange: true };
 const { validateAll, handleChange, handleChangeByValueAndName, uiValues, errors } = useValidatedForm(schema, entity, options);
 ```
 # Step three: Add components.
-Nest the desired components within a "VForm" component.  The "VForm" should receive "validateAll" and an "onSubmit" handler. This handler will receive an object with all values contained in the form.  it will only be called when all validation passes.
+Nest the desired components within a "VForm" component.  The "VForm" should receive "validateAll" and an "onSubmit" handler. This handler be called when the form has passed validation and is submitting.  It will ONLY be called when ALL validation passes.  It does not receive form values, but is merely called.  In your handler, you should use the "uiValues" returned by the "useValidatedForm" hook to get the form's values.
 Example:
 ```
 <Vform validateAll={validateAll} onSubmit={mySubmitHandler}>
@@ -108,7 +108,7 @@ Example:
 ```
 The options for components are "VFormControl", "VSelect", "VDateRange", "VUTCDateTimeInput", "VSelectListWithDynamicOptions", "VComboDropdownWithDynamicOptions", and "VComboDropdownWithStaticOptions".
 
-Another option for more easily setting up VFormControls is by using the "registerVFormControl" function returned by the useValidatedForm hook.  It automatically sets the following properties:
+Another option for more easily setting up VFormControls is by using the "registerVFormControl" function returned by the useValidatedForm hook.  It automatically returns the following properties:
 - labelText,
 - inputName,
 - type,
@@ -117,7 +117,7 @@ Another option for more easily setting up VFormControls is by using the "registe
 - handleChange,
 - handleChangeByValueAndName
 
-Simply pass in 'propertyName', optional 'labelText', and 'type'.  'type' defaults to 'text', so if your VFormControl is a text input, the 'type' parameter is also optional.  Other properties can still be manually set after the register function.
+Simply pass in 'propertyName', optional 'labelText', and 'type'.  'type' defaults to 'text', so if your VFormControl is a text input, the 'type' parameter is also optional.  Other properties can still be manually set after the register function.  The returned values should be applied using spread syntax.
 
 Note: Since these properties also work with VUTCDateTimeInput and VSelect, "registerVFormControl" works with them as well.
 
@@ -305,9 +305,9 @@ Usage Summary:
 - Map each item to a series of inputs and/or VForm components using:
   - a "handleListChange" or "handleListChangeByValueAndName" that accepts the item as the last param,
   - its matching errorObject using getErrorObjectForItem,
-  - a "removeItem" that accepts the item as a param
-- Provide a means of calling the "addItem" function if desired
-- Display listError if a listValidator was provided when calling the hook
+  - (Optional) a "removeItem" that accepts the item as a param
+- (Optional) Provide a means of calling the "addItem" function
+- (Optional) Display listError if a listValidator was provided when calling the hook
 
 List Validation Example:
 
