@@ -3,6 +3,38 @@ React Form Validation made easy!
 
   This library will handle form state management and validation, while giving you total control and letting you easily add your own custom logic to the process.  By default, the form will run all validation on form submission and prevent the submit from succeeding if any validation checks fail.
 
+## Contents
+- Simple Example
+- Step-By-Step
+- Complete Example
+- List Validation
+- Validation Rule Options
+
+## Bare-bones example
+At its simplest level of implementation, you will define a schema of rules, call the useValidatedForm hook, and create your components:
+
+```
+const SimpleForm = ({}) => {
+  const schema = {
+    name: new Validator().required(),
+    age: new Validator().required().min(21)
+  }
+
+  const handleSubmit = () => { console.log(`submitting name: ${uiValues.name}, age: ${uiValues.age}`) }
+
+  const { validateAll, uiValues, registerVFormControl } = useValidatedForm(schema);
+
+  return (
+    <VForm validateAll={validateAll} onSubmit={handleSubmit}>
+      <VFormControl {...registerVFormControl({ propertyName: 'name', labelText: 'Name' })} />
+      <VFormControl {...registerVFormControl({ propertyName: 'age', labelText: 'Age', type: 'number' })} />
+      <button type="submit">Submit</button>
+    </VForm>
+  )
+}
+```
+That's it!  There is plenty of opportunity for customization, but the base pattern is just that easy.
+
 ## Step one: Create a schema.
 
 The schema object should be an object with properties that correspond to whichever properties require validation. Assign a "Validator" to each property and call the desired function(s) to set up validation.  For example:
@@ -123,7 +155,7 @@ Example:
 />
 ```
 
-Complete example:
+# Complete example:
 ```
     const exampleEntity = {
         requiredProp: 'test',
@@ -212,8 +244,9 @@ Complete example:
     )
 ```
 
-    Above form inputs could be simplified by using the "registerVFormControl" method from "useValidatedForm":
+  Above form inputs could be simplified by using the "registerVFormControl" method from "useValidatedForm":
 
+```
         <VForm validateAll={validateAll} onSubmit={handleSubmit}>
             <VFormControl
                 {...registerVFormControl({ propertyName: 'requiredProp', labelText: 'This is required' })}
@@ -243,7 +276,7 @@ Complete example:
                 displayMode={true}
             />
         </VForm>
-
+```
         
 ******************************************
 
@@ -374,4 +407,60 @@ const BasicListForm = ({ initialValues }) => {
     </VForm>
   )
 }
+```
+
+# Validation Rule Options
+The Validator object has a list of common validation rules, plus a "custom" option and a "validateWithEntity" option to allow you to define your own rules.  All rules can be chained together for quick and easy application.  They all also accept an optional custom message parameter, but will provide a default message if excluded.  For example:
+```
+  const schema = {
+    requiredWithDefaultMessage: new Validator().required(),
+    requiredWithCustomMessage: new Validator().required('this is very required'),
+    chainedRules: new Validator().minLength(3, 'Must be 3 characters or greater').required().regex(/[A-C]*/, 'Must be only uppercase letters A-C')
+  }
+```
+Note: most rules will be considered valid if there is no value provided.  For example, since null and "undefined" are not less than 4, `new Validator().min(4)` will not be flagged as invalid until the user inputs a value.  To ensure that a value is provided by the user, combine other rules with "required": `new Validator().min(4).required()`.
+
+- required:
+  - Accepts an optional "message" parameter that overrides the default message.  Fails input if no value is provided.  E.G.: `new Validator().required('This is really required')`
+- requiredIf:
+  - Accepts a bool that determines whether or not to require the property and an optional "message" parameter that overrides the default message.  E.G.: `new Validator().requiredIf(true, 'This is really required')`
+- min:
+  - Accepts a number representing the minimum that the input can be and an optional "message" parameter that overrides the default message.  E.G.: `new Validator().min(10, 'This must be 10 or greater')` 
+- max:
+  - Accepts a number representing the maximum that the input can be and an optional "message" parameter that overrides the default message.  E.G.: `new Validator().max(10, 'This must be 10 or less')` 
+- minDate:
+  - Accepts a string in 'YYYY-MM-DD' format representing the minimum date the input can be and an optional "message" parameter that overrides the default message.  E.G.: `new Validator().minDate('1776-07-05', 'This must be after July 4th 1776')` 
+- maxDate:
+  - Accepts a string in 'YYYY-MM-DD' format representing the maximum date the input can be and an optional "message" parameter that overrides the default message.  E.G.: `new Validator().maxDate('1776-07-03', 'This must be before July 4th 1776')` 
+- minLength:
+  - Accepts a number representing the minimum character length the input can be and an optional "message" parameter that overrides the default message.  E.G.: `new Validator().minLength(5, 'This must be 5 characters or more')` 
+- maxLength:
+  - Accepts a number representing the maximum character length the input can be and an optional "message" parameter that overrides the default message.  E.G.: `new Validator().maxLength(5, 'This must be 5 characters or less')` 
+- regex:
+  - Accepts a RegEx to run against the input and an optional "message" parameter that overrides the default message.  E.G.: `new Validator().regex(/[A-E]*/, 'This must be only uppercase letters A-E')` 
+- noSpecialCharacters:
+  - Accepts an optional "message" parameter that overrides the default message.  Fails input if it includes anything except letters, numbers, and spaces.  E.G.: `new Validator().noSpecialCharacters('Only letters, numbers, and spaces allowed')`
+- phoneNumber:
+  - Accepts an optional "message" parameter that overrides the default message.  Fails input if it does not pass a generic phone number regex.  If the pattern does not fit your needs, simply use "regex" rule instead.  E.G.: `new Validator().phoneNumber('This must be a valid phone number')` 
+- numberInRange:
+  - Accepts a number representing the minimum value, another representing the maximum value, and an optional "message" parameter that overrides the default message.  Fails input if number is out of provided range (INCLUSIVE).  E.G.: `new Validator().numberInRange(5, 10, 'Number must be between 5 and 10, inclusive')` 
+- lengthInRange:
+  - Accepts a number representing the minimum value, another representing the maximum value, and an optional "message" parameter that overrides the default message.  Fails input if text length is out of provided range (INCLUSIVE).  E.G.: `new Validator().lengthInRange(5, 10, 'Text must be between 5 and 10 characters, inclusive')` 
+- isWholeNumber:
+  - Accepts an optional "message" parameter that overrides the default message.  Fails input if it is not a whole number.  E.G.: `new Validator().isWholeNumber('Value must be a whole number')`
+- validEmailAddress:
+  - Accepts an optional "message" parameter that overrides the default message.  Fails input if it is not a valid email address according to a regex.  If the pattern does not fit your needs, simply use "regex" rule instead.  E.G.: `new Validator().validEmailAddress('Must be a valid email address')`
+- minArrayOptions:
+  - Accepts a number representing the minimum value and an optional "message" parameter that overrides the default message.  Fails input if the array is less than the provided minimum.  E.G.: `new Validator().minArrayOptions(2, 'You must select at least 2 items')`
+- maxArrayOptions:
+  - Accepts a number representing the maximum value and an optional "message" parameter that overrides the default message.  Fails input if the array is more than the provided maximum.  E.G.: `new Validator().maxArrayOptions(2, 'You may select at most 2 items')`
+- longitude:
+  - Accepts an optional "message" parameter that overrides the default message.  Fails input if it is not a valid longitude.  E.G.: `new Validator().longitude('Not a valid longitude')
+- latitude:
+  - Accepts an optional "message" parameter that overrides the default message.  Fails input if it is not a valid latitude.  E.G.: `new Validator().latitude('Not a valid latitude')
+- validateWithEntity:
+  - Accepts a function to run when validating.  Will pass the input's value and the entity being validated into this function.  The function should return a string error message if the value is invalid or null if it is valid.  E.G.: `new Validator().validateWithEntity((value, entity) => { if (value == 10 && entity.budget < 10) { return 'This is more than your budget' } return null; }))
+- custom:
+  - Accepts a function to run when validating.  Will pass the input's value into this function.  The function should return a string error message if the value is invalid or null if it is valid.  E.G.: `new Validator().custom((value) => { if (value == 'goose') { return 'A goose is not allowed'; } return null; }))
+
 
