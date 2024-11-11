@@ -1,10 +1,15 @@
 import React, { useId, useState } from "react";
 import { VSelect } from "./VSelect";
-import '@/VForm/Validation.css';
+import '@/components/Validation/Validation.css';
 
-export const VSelectWithFetch = ({
+/**
+ * Creates a select list that manages its own list of options, fetched as-needed and stored in state.
+ * "getSelectList" should return a list of key-value-pairs when awaited.
+ */
+export const VFormDynamicSelect = ({
     labelText,
-    inputName,
+    keyPropertyPath,
+    inputName = keyPropertyPath,
     inputId = inputName,
     errorMessage,
     handleChange,
@@ -12,18 +17,15 @@ export const VSelectWithFetch = ({
     getSelectList,
     selectedKeyValue = '',
     selectedDisplayValue = null,
-    className = '',
+    className = 'form-select',
     htmlAttributes = null,
-    showErrorMessageAsTooltip = false,
-    loadingMessage
+    showErrorMessageAsTooltip = false
 }) => {
     const [options, setOptions] = useState(null);
-    const [isFetchingOptions, setIsFetchingOptions] = useState(false);
     const listFocused = async () => {
         if (!options) {
-            setIsFetchingOptions(true);
             await getSelectList()
-                .then(res => setOptions(res)).finally(() => { setIsFetchingOptions(false); });
+                .then(res => setOptions(res));
         }
     };
     const emptyOptionId = useId();
@@ -40,34 +42,24 @@ export const VSelectWithFetch = ({
         </>);
     };
     return (
-        <div style={{ position: 'relative' }}>
-            <VSelect
-                labelText={labelText}
-                inputName={inputName}
-                inputId={inputId}
-                inputValue={selectedKeyValue}
-                errorMessage={errorMessage}
-                handleChange={handleChange}
-                displayMode={displayMode}
-                className={className}
-                showErrorMessageAsTooltip={showErrorMessageAsTooltip}
-                htmlAttributes={{
-                    ...htmlAttributes,
-                    onFocus: listFocused
-                }}
-            >
-                {getOptions()}
-            </VSelect>
-            {isFetchingOptions && <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'absolute',
-                    top: '60%'
-                }}
-            >
-              {loadingMessage}
-            </div>}
-        </div>
+        <VSelect
+            labelText={labelText}
+            inputName={inputName}
+            inputId={inputId}
+            inputValue={selectedKeyValue}
+            errorMessage={errorMessage}
+            handleChange={handleChange}
+            displayMode={displayMode}
+            className={className}
+            showErrorMessageAsTooltip={showErrorMessageAsTooltip}
+            propertyPath={keyPropertyPath}
+            htmlAttributes={{
+                ...htmlAttributes,
+                // onClick: listFocused,
+                onFocus: listFocused
+            }}
+        >
+            {getOptions()}
+        </VSelect>
     );
 };
