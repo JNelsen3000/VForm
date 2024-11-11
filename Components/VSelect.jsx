@@ -1,15 +1,16 @@
 import React from "react";
 import { VErrorMessage } from "./VErrorMessage";
-import '@/VForm/Validation.css';
+import '@/components/Validation/Validation.css';
 
 export const VSelect = ({
     labelText = null,
-    inputName,
+    propertyPath,
+    inputName = propertyPath,
     inputId = inputName,
     inputValue = null,
     children,
     errorMessage,
-    htmlAttributes,
+    htmlAttributes = {},
     handleChange,
     displayMode = false,
     className = '',
@@ -32,6 +33,8 @@ export const VSelect = ({
         onChange={handleChange}
         className={classes.join(' ')}
         disabled={disabled || displayMode}
+        // eslint-disable-next-line react/no-unknown-property
+        propertypath={propertyPath}
         {...htmlAttributes}
         onClick={onClick}
     >
