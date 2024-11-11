@@ -1,12 +1,14 @@
+/* eslint-disable react/no-unknown-property */
 import React from 'react';
 import { VErrorMessage } from './VErrorMessage';
-import '@/VForm/Validation.css';
+import '@/components/Validation/Validation.css';
 import { format, parseISO } from 'date-fns';
 
 export const VFormControl = ({
     labelText = null,
     type,
-    inputName,
+    propertyPath,
+    inputName = propertyPath,
     inputId = inputName,
     inputValue = null,
     errorMessage,
@@ -37,61 +39,64 @@ export const VFormControl = ({
 
     let input;
     switch (type) {
-    case 'checkbox':
-        input = (
-            <input
-                disabled={displayMode || disabled}
-                checked={!!inputValue}
-                id={inputId}
-                name={inputName}
-                onChange={handleChange}
-                className={classes.join(' ')}
-                type="checkbox"
-                {...htmlAttributes}
-            />
-        );
-        break;
-    case 'date':
-    {
-        const val = parseISO(inputValue);
-        const displayVal = (val == 'Invalid Date' ? '' : format(val, 'yyyy-MM-dd'));
-        input = (
-            <input
-                readOnly={displayMode}
-                value={displayVal ?? ''}
-                id={inputId}
-                name={inputName}
-                onChange={handleChange}
-                type={type}
-                className={classes.join(' ')}
-                {...htmlAttributes}
-            />
-        );
-        break;
-    }
-    default:
-        input = (
-            <input
-                readOnly={displayMode || disabled}
-                disabled={displayMode || disabled}
-                value={inputValue ?? ''}
-                id={inputId}
-                name={inputName}
-                onChange={handleChange}
-                type={type}
-                className={classes.join(' ')}
-                {...htmlAttributes}
-            >
-                {addButtonClick &&
+        case 'checkbox':
+            input = (
+                <input
+                    disabled={displayMode || disabled}
+                    checked={!!inputValue}
+                    id={inputId}
+                    name={inputName}
+                    onChange={handleChange}
+                    className={classes.join(' ')}
+                    type="checkbox"
+                    propertypath={propertyPath}
+                    {...htmlAttributes}
+                />
+            );
+            break;
+        case 'date':
+        {
+            const val = parseISO(inputValue);
+            const displayVal = (val == 'Invalid Date' ? '' : format(val, 'yyyy-MM-dd'));
+            input = (
+                <input
+                    readOnly={displayMode}
+                    value={displayVal ?? ''}
+                    id={inputId}
+                    name={inputName}
+                    onChange={handleChange}
+                    type={type}
+                    className={classes.join(' ')}
+                    propertypath={propertyPath}
+                    {...htmlAttributes}
+                />
+            );
+            break;
+        }
+        default:
+            input = (
+                <input
+                    readOnly={displayMode}
+                    disabled={disabled}
+                    value={inputValue ?? ''}
+                    id={inputId}
+                    name={inputName}
+                    onChange={handleChange}
+                    type={type}
+                    className={classes.join(' ')}
+                    propertypath={propertyPath}
+                    {...htmlAttributes}
+                >
+                    {addButtonClick &&
                     <button
                         className="btn btn-outline-secondary"
                         type="button"
                         id="ariaDescribedby" onClick={addButtonClick}>
                         Button
                     </button>
-                }
-            </input>
-        );
+                    }
+                </input>
+            );
     }
     return (
         <div className={"validated-form-control-div " + (type == "check" ? ' form-check' : '')}>
