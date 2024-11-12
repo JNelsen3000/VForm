@@ -20,14 +20,14 @@ const SimpleForm = ({}) => {
     age: new Validator().required().min(21)
   }
 
-  const handleSubmit = () => { console.log(`submitting name: ${uiValues.name}, age: ${uiValues.age}`) }
+  const handleSubmit = () => { console.log(`submitting name: ${formValues.name}, age: ${formValues.age}`) }
 
-  const { validateAll, uiValues, registerVFormControl } = useValidatedForm(schema);
+  const { validateAll, formValues, registerVFormControl } = useVForm(schema);
 
   return (
     <VForm validateAll={validateAll} onSubmit={handleSubmit}>
-      <VFormControl {...registerVFormControl({ propertyName: 'name', labelText: 'Name' })} />
-      <VFormControl {...registerVFormControl({ propertyName: 'age', labelText: 'Age', type: 'number' })} />
+      <VFormControl {...registerVFormControl('name')} labelText="Name" />
+      <VFormControl {...registerVFormControl('age', 'number')} labelText="Age" />
       <button type="submit">Submit</button>
     </VForm>
   )
@@ -64,167 +64,116 @@ const schema = {
 ```
 ## Step two: Call the hook.
 
-Call the "useValidatedForm" hook, passing in the schema object and the entity that the form is viewing/editing/creating.  The "useValidatedForm" hook will return "uiValues", "errors", "handleChange", "handleChangeByValueAndName", "validateAll" and more.  You may optionally pass in an "options" parameter.  This "options" parameter supports the following:
+Call the "useVForm" hook, passing in the schema object and the entity that the form is viewing/editing/creating.  The "useVForm" hook will return "uiValues", "errors", "handleChange", "handleChangeByPropertyPathAndValue", "validateAll" and more.
 
-- "manualReset": a bool telling the form not to reset automatically when the entity prop changes.  Defaults to false.
-- "noValidationOnChange": a bool telling the form not to validate onChange, only onSubmit.  Defaults to false.
-
-Returned by the "useValidatedForm" hook:
-- "uiValues" is the object that holds the current values for the form, separate from the initial values which will remain unchanged.
+Returned by the "useVForm" hook:
+- "formValues" is the object that holds the current values for the form, separate from the initial values which will remain unchanged.
 - "errors" is an object that will track invalid inputs.  if an input is invalid, the "errors" object will have a property with the same name as the property assigned to the input.  The value will be the relevant error message.  For example, if the 'name' property must not be longer than 5 characters and it's value is 'abcdefgh', the errors object could look like this:
            `{ name: 'Name must not be longer than 5 characters' }`
-- "handleChange", and "handleChangeByValueAndName" are methods to allow the form to continue tracking all values.  Use these in the components placed in the form later.
-- "clearErrors" and "clearError" allow you to manually clear all errors or a single error by propname.
-- "setPropertyError" allows you to manually set an error message for a property.  Pass in the prop name and an error message.
-- "resetForm" can be called to manually reset the form, passing in any new initial values.
-- "validate" lets you force the form to validate a specific field.  Pass in the prop name and value.
+if you need a nested error with a complex property path, you could instead call "getErrorByPath"
+- "handleChangeByPropertyPathAndValue" allows the form to continue tracking all values.  Use this in the components placed in the form later.
+- "setErrorByPath" allows you to manually set an error message for a property.  Pass in the path and an error message (or null to clear the error).
+- "getErrorByPath" allows you to retrieve the error message for a property.  Pass in the path to the property.
+- "resetForm" can be called to manually reset the form, optionally passing in any new initial values.
+- "getInputProperties" allows you to quickly register an HTML input or custom component instead of using VForm components.  it returns "onChange", "type", "value", and "propertypath" (required for useVForm).
 - "registerVFormControl" allows you to easily register a VFormControl by returning a set of commonly used properties for you.
-- "registerInputWithDisplayValue" is similar to "registerVFormControl", with a couple other properties unique to inputs that also use a display value.  Examples for each are shown in step 3 below.  NOTE: IT WILL NOT RETURN HTMLATTRIBUTES.
+- "registerVFormControlWithDisplayValue" is similar to "registerVFormControl", with a couple other properties unique to inputs that also use a display value (like VSelect).  Examples for each are shown in step 3 below.
+- "registerDateRangeControl" returns the minimum required properties for VFormDateRangeInput to register with the useVForm hook.
 - "validateAll" will be provided to the form to allow it to run validation against all inputs on submit.  It can also be called manually.
+some returned values are used only when the entity is a complex, nested entity:
+- "addArrayItem" adds new (empty) item to a nested list, updates "errors", and queues the parent list for revalidation if list was invalid.  accepts the path to the value, and an optional default value object, necessary if the entity has nested lists.
+- "removeArrayItem" removes item from nested list, updates "errors", and queues the list for revalidation if list was invalid.
+- "removeArrayItems" removes multiple items from nested list, updates "errors", and queues the list for revalidation if list was invalid.
+- "replaceAllArrayItems" replaces all items in nested list, updates "errors", and queues the list for revalidation if list was invalid.
+- "getNestedEntityHasErrors" returns true if selected entity is invalid.  provide the propertyPath of the entity to target.
 
-"useValidatedForm" example:
+"useVForm" example:
 ```
-// without options
 const { validateAll, handleChange, handleChangeByValueAndName, uiValues, errors } = useValidatedForm(schema, entity);
-
-// with options
-const options = { manualReset: true, noValidationOnChange: true };
-const { validateAll, handleChange, handleChangeByValueAndName, uiValues, errors } = useValidatedForm(schema, entity, options);
 ```
 # Step three: Add components.
-Nest the desired components within a "VForm" component.  The "VForm" should receive "validateAll" and an "onSubmit" handler. This handler be called when the form has passed validation and is submitting.  It will ONLY be called when ALL validation passes.  It does not receive form values, but is merely called.  In your handler, you should use the "uiValues" returned by the "useValidatedForm" hook to get the form's values.
+Nest the desired components within a "VForm" component.  The "VForm" should receive "validateAll" and an "onSubmit" handler. This handler be called when the form has passed validation and is submitting.  It will ONLY be called when ALL validation passes.  It does not receive form values, but is merely called.  In your handler, you should use the "formValues" returned by the "useValidatedForm" hook to get the form's current values.
 Example:
 ```
 <Vform validateAll={validateAll} onSubmit={mySubmitHandler}>
   <VFormControl
+    {...registerVFormControl('propertyPath')}
     labelText={myLabel}
-    inputName={myInputName}
-    type={'text'}
-    inputValue={uiValues.myInputName}
-    errorMessage={errors.myInputName}
-    handleChange={handleChange}
   />
 </VForm>
 ```
-The options for components are "VFormControl", "VSelect", "VDateRange", "VUTCDateTimeInput", "VSelectListWithDynamicOptions", "VComboDropdownWithDynamicOptions", and "VComboDropdownWithStaticOptions".
+The options for components are "VFormControl", "VSelect", "VSelectWithFetch", and "VFormUTCDateTimeInput".
 
 Another option for more easily setting up VFormControls is by using the "registerVFormControl" function returned by the useValidatedForm hook.  It automatically returns the following properties:
-- labelText,
 - inputName,
 - type,
 - inputValue,
 - errorMessage,
 - handleChange,
-- handleChangeByValueAndName
+- handleChangeByPropertyPathAndValue,
+- propertyPath
 
-Simply pass in 'propertyName', optional 'labelText', and 'type'.  'type' defaults to 'text', so if your VFormControl is a text input, the 'type' parameter is also optional.  Other properties can still be manually set after the register function.  The returned values should be applied using spread syntax.
+Simply pass in the property path (or the property name for flat entities) and type (type defaults to 'text', so you only need this if it is otherwise).  Other properties can still be manually set after the register function.  The returned values should be applied using spread syntax.
 
-Note: Since these properties also work with VUTCDateTimeInput and VSelect, "registerVFormControl" works with them as well.
+Note: Since these properties also work with VFormUTCDateTimeInput and VSelect, "registerVFormControl" works with them as well.
 
 Examples:
 ```
 <VFormControl
-  {...registerVFormControl({ propertyName: 'myTextProp', labelText: 'My Text Label' })}
+  {...registerVFormControl('myTextProp')}
+  labelText="My Text Label"
   displayMode={true}
 />
 <VFormControl
-  {...registerVFormControl({ propertyName: 'myNumberProp', labelText: 'My Number Label', type: 'number' })}
-  displayMode={false}
+  {...registerVFormControl('myNumberProp', 'number')}
+  labelText="My Number Label"
 />
 <VFormControl
-  {...registerVFormControl({ propertyName: 'myTextPropWithNoLabel' })}
-  htmlAttributes={ readOnly: true }
+  {...registerVFormControl('myTextPropWithNoLabel')}
 />
 ```        
-Similarly, the "registerInputWithDisplayValue" can quickly set up V-components that have a linked display property, such as "VSelectListWithDynamicOptions", "VComboDropdownWithDynamicOptions", and "VComboDropdownWithStaticOptions".  "registerInputWithDisplayValue" returns the following:
+Similarly, the "registerInputWithDisplayValue" can quickly set up V-components that have a linked display property, such as "VSelectWithFetch".  "registerInputWithDisplayValue" returns the following:
 - handleChange,
-- handleChangeByValueAndName,
+- handleChangeByPropertyPathAndValue,
 - keyPropertyName,
 - inputName,
 - displayPropertyName,
 - inputId,
 - selectedKeyValue,
 - selectedDisplayValue,
-- errorMessage,
-- labelText
+- errorMessage
 
 Example:
 ```
-<VSelectListWithDynamicOptions
-  {...registerInputWithDisplayValue({ keyPropertyName: 'keyProp', displayPropertyName: 'displayProp', labelText: 'I Have a Display Value' })}
+<VSelectWithFetch
+  {...registerInputWithDisplayValue('keyProp', 'displayProp')}
+  getSelectList={MyDataLayer.GetListForThisProp}
+  labelText='I will display "displayProp" instead of "keyProp"'
 />
 ```
 
 # Complete example:
 ```
-    const exampleEntity = {
-        requiredProp: 'test',
-        propWithMinValue: 5,
-        propWithMaxValue: 6,
-        complexProp: 'abcdefg',
-        propWithCustomLogic: 'doggo',
-        unvalidatedProp: 'anything goes',
-        propWithCustomErrorMessage: 'my message'
-    }
-
-    const handleSubmit = () => { console.log(uiValues); } // called on form submit IF all validation passes
-
-    const schema = {
-        requiredProp: new Validator().required(),
-        propWithMinValue: new Validator().min(0),
-        propWithMaxValue: new Validator().max(10),
-        complexProp: new Validator().minLength(6).maxLength(8).required(),
-        propWithCustomLogic: new Validator().custom((val) => {
-            if (val != 'doggo') {
-                return 'Must be "doggo"';
-            }
-            return null;
-        }),
-        propWithCustomErrorMessage: new Validator().required('I really need you to fill this one in')
-    }
-
-    const { uiValues, errors, handleChange, handleChangeByValueAndName, validateAll} = useValidatedForm(schema, exampleEntity);
-
-    return (
         <VForm validateAll={validateAll} onSubmit={handleSubmit}>
             <VFormControl
-                labelText={'This is required'}
-                inputName={'requiredProp'}
-                inputValue={uiValues.requiredProp} // value comes from "uiValues", not from "exampleEntity"
-                errorMessage={errors.requiredProp}
-                handleChange={handleChange}
-                type={'text'}
+                {...registerVFormControl('requiredProp')}
+                labelText="Required Prop"
             />
             <VFormControl
-                labelText={'Above zero'}
-                inputName={'propWithMinValue'}
-                inputValue={uiValues.propWithMinValue}
-                errorMessage={errors.propWithMinValue}
-                handleChange={handleChange}
-                type={'number'}
+                {...registerVFormControl('propWithMinValue', 'number')}
+                labelText="Above Zero"
             />
             <VFormControl
-                labelText={'Below 10'}
-                inputName={'propWithMaxValue'}
-                inputValue={uiValues.propWithMaxValue}
-                errorMessage={errors.propWithMaxValue}
-                handleChange={handleChange}
-                type={'number'}
+                {...registerVFormControl('propWithMaxValue', 'number')}
+                labelText="Below 10"
             />
             <VFormControl
-                labelText={'Between 6 and 8 characters long, and is required.'}
-                inputName={'complexProp'}
-                inputValue={uiValues.complexProp}
-                errorMessage={errors.complexProp}
-                handleChange={handleChange}
-                type={'text'}
+                {...registerVFormControl('complexProp')}
+                labelText="Between 6 and 8 characters long, and is required"
             />
             <VSelect
-                labelText={'Pick the doggo'}
-                inputName={'propWithCustomLogic'}
-                inputValue={uiValues.propWithCustomLogic}
-                errorMessage={errors.propWithCustomLogic}
-                handleChange={handleChange}
+                {...registerVFormControl('propWithCustomLogic')}
+                labelText="Pick the Doggo"
             >
                 <option value={''}>---</option>
                 <option value={'kitteh'}>Kitteh</option>
@@ -232,48 +181,8 @@ Example:
                 <option value={'rock'}>A rock</option>
             </VSelect>
             <VFormControl
-                labelText={'Not validated'}
-                inputName={'unvalidatedProp'}
-                inputValue={uiValues.unvalidatedProp}
-                errorMessage={errors.unvalidatedProp}
-                handleChange={handleChange}
-                type={'text'}
-                displayMode={true}
-            />
-        </VForm>
-    )
-```
-
-  Above form inputs could be simplified by using the "registerVFormControl" method from "useValidatedForm":
-
-```
-        <VForm validateAll={validateAll} onSubmit={handleSubmit}>
-            <VFormControl
-                {...registerVFormControl({ propertyName: 'requiredProp', labelText: 'This is required' })}
-            />
-            <VFormControl
-                {...registerVFormControl({ propertyName: 'propWithMinValue', labelText: 'Above zero', type: 'number' })}
-            />
-            <VFormControl
-                {...registerVFormControl({ propertyName: 'propWithMaxValue', labelText: 'Below 10', type: 'number' })}
-            />
-            <VFormControl
-                {...registerVFormControl({
-                    propertyName: 'complexProp',
-                    labelText: 'Between 6 and 8 characters long, and is required'
-                })}
-            />
-            <VSelect
-                {...registerVFormControl({ propertyName: 'propWithCustomLogic', labelText: 'Pick the doggo' })}
-            >
-                <option value={''}>---</option>
-                <option value={'kitteh'}>Kitteh</option>
-                <option value={'doggo'}>Doggo</option>
-                <option value={'rock'}>A rock</option>
-            </VSelect>
-            <VFormControl
-                {...registerVFormControl({ propertyName: 'unvalidatedProp', labelText: 'Not validated' })}
-                displayMode={true}
+                {...registerVFormControl('unvalidatedProp')}
+                labelText="Not Validated"
             />
         </VForm>
 ```
@@ -282,7 +191,7 @@ Example:
 
 # List Validation:
 
-The useValidatedList hook can be used to support a dynamic list of items in your forms.  It functions very similarly to the "useValidatedForm" hook.  It receives a schema that will be run against each item.  Optionally, it can receive a single Validator to run on the list as a whole.
+The useVForm hook can be used to support dynamic lists of items in your forms.  It functions very similarly to the "useValidatedForm" hook.  It receives a schema that will be run against each item.  Optionally, it can receive a single Validator to run on the list as a whole.
 
 Returned items:
 - uiValues: Values tracked by form
