@@ -1,11 +1,12 @@
 import { format, isAfter, isBefore, parse, parseISO } from "date-fns";
+
 export default class Validator {
     constructor () {
         this.rules = [];
-        this.validateWithEntityRules = [];
+        this.validateWithListItemRules = [];
     }
 
-    runValidation (value, entity) {
+    runValidation (value, listItem = null) {
         let errorMessage = null;
         for (let i = 0; i < this.rules.length; i++) {
             const error = this.rules[i](value);
@@ -14,10 +15,10 @@ export default class Validator {
                 errorMessage = error;
             }
         }
-        for (let i = 0; i < this.validateWithEntityRules.length; i++) {
-            const error = this.validateWithEntityRules[i](value, entity);
+        for (let i = 0; i < this.validateWithListItemRules.length; i++) {
+            const error = this.validateWithListItemRules[i](value, listItem);
             if (error) {
-                i = this.validateWithEntityRules.length + 1;
+                i = this.validateWithListItemRules.length + 1;
                 errorMessage = error;
             }
         }
@@ -144,12 +145,24 @@ export default class Validator {
         return this;
     }
 
-    /** Will pass the current entity in the the validationFunc when validating
-     * @param {*} validationFunc should accept the input's value and the entity, then return null if valid or an error message if invalid
-    */
-    validateWithEntity (validationFunc) {
-        this.validateWithEntityRules.push(validationFunc);
+    /** Will pass the list item in the validationFunc when validating
+     * @param {*} validationFunc should accept the input's value and list item, then return null if valid or an error message if invalid
+     */
+    validateWithListItem (validationFunc) {
+        this.validateWithListItemRules.push(validationFunc);
         return this;
+    }
+}
+
+export class NestedListValidator extends Validator {
+    constructor (propertyPath, itemSchema) {
+        super();
+        Object.keys(itemSchema).forEach(key => {
+            itemSchema[key].isNestedListValidatorChild = true;
+        });
+        this.itemSchema = itemSchema;
+        this.propertyPath = propertyPath;
+        this.type = 'array';
     }
 }
 
