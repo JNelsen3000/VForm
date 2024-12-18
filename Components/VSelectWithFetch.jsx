@@ -6,7 +6,7 @@ import '@/components/Validation/Validation.css';
  * Creates a select list that manages its own list of options, fetched as-needed and stored in state.
  * "getSelectList" should return a list of key-value-pairs when awaited.
  */
-export const VFormDynamicSelect = ({
+export const VSelectWithFetch = ({
     labelText,
     keyPropertyPath,
     inputName = keyPropertyPath,
@@ -55,7 +55,6 @@ export const VFormDynamicSelect = ({
             propertyPath={keyPropertyPath}
             htmlAttributes={{
                 ...htmlAttributes,
-                // onClick: listFocused,
                 onFocus: listFocused
             }}
         >
