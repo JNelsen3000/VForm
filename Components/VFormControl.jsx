@@ -18,13 +18,9 @@ export const VFormControl = ({
     disabled = false,
     className = null,
     labelClassName = null,
-    addButtonClick = null,
     labelAttributes = null,
-    labelTooltip,
     showErrorMessageAsTooltip = false
 }) => {
-    const label = <label htmlFor={inputId} className={labelClassName} {...labelAttributes} >{labelText}</label>;
-
     if (showErrorMessageAsTooltip) { htmlAttributes.title = errorMessage ?? htmlAttributes.title; }
 
     const errorElement = showErrorMessageAsTooltip ? null : <VErrorMessage errorMessage={errorMessage} />;
@@ -35,8 +31,7 @@ export const VFormControl = ({
         classes.push('display-mode');
         if (htmlAttributes.title) { htmlAttributes.title += '  You may not edit this field.'; } else { htmlAttributes.title = 'You may not edit this field.'; }
     }
-    // console.log(labelText, displayMode);
-
+    
     let input;
     switch (type) {
         case 'checkbox':
@@ -86,22 +81,12 @@ export const VFormControl = ({
                     className={classes.join(' ')}
                     propertypath={propertyPath}
                     {...htmlAttributes}
-                >
-                    {addButtonClick &&
-                    <button
-                        className="btn btn-outline-secondary"
-                        type="button"
-                        id="ariaDescribedby" onClick={addButtonClick}>
-                        Button
-                    </button>
-                    }
-                </input>
+                />
             );
     }
     return (
         <div className={"validated-form-control-div " + (type == "check" ? ' form-check' : '')}>
-            {labelText && label}
-            {labelTooltip}
+            {labelText && <label htmlFor={inputId} className={labelClassName} {...labelAttributes} >{labelText}</label>}
             {input}
             {errorElement}
         </div>
